@@ -25,7 +25,7 @@ docker run -it --rm \
     -e SERVERLESS_ACCESS_KEY=$SERVERLESS_ACCESS_KEY \
     -v ~/.aws:/root/.aws \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    -v $(pwd)/src:/deploy_scripts \
+    -v $(pwd)/scripts:/deploy_scripts \
     -v /path/deploy_projects:/deploy_projects \
     deployertest bash
 ```
