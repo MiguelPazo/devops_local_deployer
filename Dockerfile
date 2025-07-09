@@ -113,5 +113,5 @@ RUN chmod +x *.sh && \
 
 # ---------- Final settings ----------
 WORKDIR /
-ENTRYPOINT ["/usr/local/bin/deploy"]
-CMD []
+SHELL ["/bin/bash", "-c"]
+CMD ["bash"]
