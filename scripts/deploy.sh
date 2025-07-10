@@ -60,6 +60,9 @@ export NVM_DIR="$HOME/.nvm"
 source "$NVM_DIR/nvm.sh"
 nvm use default
 
+export SDKMAN_DIR="/root/.sdkman"
+[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"
+
 # === MARK START TIME ===
 START_TIME=$(date +%s)
 START_HUMAN=$(date "+%Y-%m-%d %H:%M:%S")
@@ -70,15 +73,19 @@ echo "pipeline type: $TYPE"
 # === DISPATCH TO CORRECT PIPELINE ===
 case "$TYPE" in
   frontend_cloudfront_s3)
+#    ./deploy_frontend_cf.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
     deploy_frontend_cf --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
     ;;
   frontend_ecs_fargate)
+#    ./deploy_frontend_ecs.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
     deploy_frontend_ecs --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
     ;;
   webservice_sls_python)
+#    ./deploy_sls.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
     deploy_sls --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
     ;;
   webservice_ecs_fargate)
+#    ./deploy_ecs.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
     deploy_ecs --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
     ;;
   *)

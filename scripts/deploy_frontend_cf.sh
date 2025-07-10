@@ -80,7 +80,6 @@ if [[ -z "$BUILD_DIR" || "$BUILD_DIR" == "null" || \
   exit 1
 fi
 
-
 # === CLONE REPOSITORY ===
 if [[ -z "$GIT_USERNAME" || -z "$GIT_TOKEN" ]]; then
   echo "Missing GIT_USERNAME or GIT_TOKEN environment variables"

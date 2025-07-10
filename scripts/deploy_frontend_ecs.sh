@@ -63,9 +63,6 @@ if [[ "$APP_NAME" == "null" || "$REPO_HTTP" == "null" ]]; then
 fi
 
 # === LOAD ENVIRONMENT CONFIG VALUES ===
-BUILD_DIR=$(jq -r ."$ENVIRONMENT".BUILD_DIR "$CONFIG_FILE")
-BUCKET_S3_BUILD=$(jq -r ."$ENVIRONMENT".BUCKET_S3_BUILD "$CONFIG_FILE")
-BUCKET_S3_PREFIX=$(jq -r ."$ENVIRONMENT".BUCKET_S3_PREFIX "$CONFIG_FILE")
 ECR_REPOSITORY=$(jq -r ."$ENVIRONMENT".ECR_REPOSITORY "$CONFIG_FILE")
 ECR_REGISTRY=$(jq -r ."$ENVIRONMENT".ECR_REGISTRY "$CONFIG_FILE")
 ECR_REGION=$(jq -r ."$ENVIRONMENT".ECR_REGION "$CONFIG_FILE")
@@ -73,10 +70,7 @@ ECS_CLUSTER=$(jq -r ."$ENVIRONMENT".ECS_CLUSTER "$CONFIG_FILE")
 ECS_SERVICE=$(jq -r ."$ENVIRONMENT".ECS_SERVICE "$CONFIG_FILE")
 DOCKER_BUILD_ARGS=$(jq -c ."$ENVIRONMENT".DOCKER_BUILD_ARGS "$CONFIG_FILE")
 
-if [[ -z "$BUILD_DIR" || "$BUILD_DIR" == "null" || \
-      -z "$BUCKET_S3_BUILD" || "$BUCKET_S3_BUILD" == "null" || \
-      -z "$BUCKET_S3_PREFIX" || "$BUCKET_S3_PREFIX" == "null" || \
-      -z "$ECR_REPOSITORY" || "$ECR_REPOSITORY" == "null" || \
+if [[ -z "$ECR_REPOSITORY" || "$ECR_REPOSITORY" == "null" || \
       -z "$ECR_REGISTRY" || "$ECR_REGISTRY" == "null" || \
       -z "$ECR_REGION" || "$ECR_REGION" == "null" || \
       -z "$ECS_CLUSTER" || "$ECS_CLUSTER" == "null" || \
@@ -145,18 +139,6 @@ npm install || { echo "npm install failed"; exit 1; }
 
 echo "Building the project..."
 npm run build || { echo "npm run build failed"; exit 1; }
-
-# === CREATE TAR.GZ ARCHIVE ===
-ARCHIVE_NAME="${APP_NAME}-${VERSION}.tar.gz"
-ARCHIVE_PATH="/tmp/$ARCHIVE_NAME"
-
-echo "Creating archive: $ARCHIVE_PATH from $BUILD_DIR..."
-tar -czf "$ARCHIVE_PATH" -C "$BUILD_DIR" . || { echo "Error creating archive."; exit 1; }
-
-# === UPLOAD ARCHIVE TO BUILD BUCKET ===
-S3_ARCHIVE_PATH="s3://${BUCKET_S3_BUILD}${BUCKET_S3_PREFIX}/${ARCHIVE_NAME}"
-echo "Uploading archive to $S3_ARCHIVE_PATH..."
-aws s3 cp "$ARCHIVE_PATH" "$S3_ARCHIVE_PATH" || { echo "Error uploading archive to S3."; exit 1; }
 
 # === DOCKER LOGIN ===
 echo "Logging in to ECR..."

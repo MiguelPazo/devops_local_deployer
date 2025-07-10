@@ -68,17 +68,22 @@ ECR_REGISTRY=$(jq -r ."$ENVIRONMENT".ECR_REGISTRY "$CONFIG_FILE")
 ECR_REGION=$(jq -r ."$ENVIRONMENT".ECR_REGION "$CONFIG_FILE")
 ECS_CLUSTER=$(jq -r ."$ENVIRONMENT".ECS_CLUSTER "$CONFIG_FILE")
 ECS_SERVICE=$(jq -r ."$ENVIRONMENT".ECS_SERVICE "$CONFIG_FILE")
+JAVA_VERSION=$(jq -r ."$ENVIRONMENT".JAVA_VERSION "$CONFIG_FILE")
+MAVEN_VERSION=$(jq -r ."$ENVIRONMENT".MAVEN_VERSION "$CONFIG_FILE")
+BUILD_COMMAND=$(jq -r ."$ENVIRONMENT".BUILD_COMMAND "$CONFIG_FILE")
 DOCKER_BUILD_ARGS=$(jq -c ."$ENVIRONMENT".DOCKER_BUILD_ARGS "$CONFIG_FILE")
 
 if [[ -z "$ECR_REPOSITORY" || "$ECR_REPOSITORY" == "null" || \
       -z "$ECR_REGISTRY" || "$ECR_REGISTRY" == "null" || \
       -z "$ECR_REGION" || "$ECR_REGION" == "null" || \
       -z "$ECS_CLUSTER" || "$ECS_CLUSTER" == "null" || \
-      -z "$ECS_SERVICE" || "$ECS_SERVICE" == "null" ]]; then
+      -z "$ECS_SERVICE" || "$ECS_SERVICE" == "null" || \
+      -z "$JAVA_VERSION" || "$JAVA_VERSION" == "null" || \
+      -z "$MAVEN_VERSION" || "$MAVEN_VERSION" == "null" || \
+      -z "$BUILD_COMMAND" || "$BUILD_COMMAND" == "null" ]]; then
   echo "❌ Missing or invalid configuration values (empty or 'null')."
   exit 1
 fi
-
 
 # === CLONE REPOSITORY ===
 if [[ -z "$GIT_USERNAME" || -z "$GIT_TOKEN" ]]; then
@@ -126,7 +131,31 @@ fi
 
 ECR_IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}"
 
+# Load SDKMAN
+if [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
+  source "$HOME/.sdkman/bin/sdkman-init.sh"
+else
+  echo "SDKMAN is not available at \$HOME/.sdkman"
+  exit 1
+fi
+
+# Install Java
+echo "Installing Java version $JAVA_VERSION using SDKMAN..."
+echo "n" | sdk install java $JAVA_VERSION || { echo "Failed to install Java"; exit 1; }
+
+# Install Maven
+echo "Installing Maven version $MAVEN_VERSION using SDKMAN..."
+echo "n" | sdk install maven $MAVEN_VERSION || { echo "Failed to install Maven"; exit 1; }
+
+# Activate versions
+sdk use java $JAVA_VERSION || { echo "Failed to activate Java $JAVA_VERSION"; exit 1; }
+sdk use maven $MAVEN_VERSION || { echo "Failed to activate Maven $MAVEN_VERSION"; exit 1; }
+
 # === BUILD PROJECT ===
+echo "Running build command: $BUILD_COMMAND"
+eval "$BUILD_COMMAND" || { echo "Build command failed"; exit 1; }
+
+# === BUILD DOCKER IMAGE===
 echo "Entering app directory: $APP_PATH"
 cd "$APP_PATH" || exit 1
 

@@ -2,21 +2,15 @@
 
 [![Docker Hub](https://img.shields.io/docker/pulls/miguelpazo/devops-local-deployer?style=flat-square)](https://hub.docker.com/r/miguelpazo/devops-local-deployer)
 
-Imagen disponible en Docker Hub: [miguelpazo/devops-local-deployer](https://hub.docker.com/r/miguelpazo/devops-local-deployer)
+Image available on Docker Hub: [miguelpazo/devops-local-deployer](https://hub.docker.com/r/miguelpazo/devops-local-deployer)
 
-Final image
+Build image
 
 ```bash
 docker build --no-cache --network host -t deployer .
-```
-
-Test image
-
-```bash
-docker build --no-cache --network host -f DockerfileTest -t deployertest .
 
 docker run -it --rm \
-    --hostname deployertest \
+    --hostname deployer \
     -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
     -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
     -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN \
@@ -27,7 +21,7 @@ docker run -it --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v $(pwd)/scripts:/deploy_scripts \
     -v /path/deploy_projects:/deploy_projects \
-    deployertest bash
+    deployer bash
 ```
 
 

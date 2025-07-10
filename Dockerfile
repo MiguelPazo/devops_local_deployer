@@ -43,6 +43,23 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     unzip awscliv2.zip && ./aws/install && \
     rm -rf awscliv2.zip aws
 
+# ---------- SDKMAN + Java 8, 11, 17 ----------
+ENV SDKMAN_DIR="/root/.sdkman"
+ENV PATH="${SDKMAN_DIR}/candidates/java/current/bin:$PATH"
+
+RUN curl -s "https://get.sdkman.io" | bash && \
+    bash -c "source $SDKMAN_DIR/bin/sdkman-init.sh && \
+    sdk install java 8.0.392-tem && \
+    sdk install java 11.0.23-tem && \
+    sdk install java 17.0.9-tem && \
+    sdk install java 21.0.7-tem && \
+    sdk default java 21.0.7-tem && \
+    sdk install maven 3.9.6 && \
+    sdk default maven 3.9.6"
+
+RUN echo "export SDKMAN_DIR=\"/root/.sdkman\"" >> ~/.bashrc && \
+    echo "[[ -s \"\$SDKMAN_DIR/bin/sdkman-init.sh\" ]] && source \"\$SDKMAN_DIR/bin/sdkman-init.sh\"" >> ~/.bashrc
+
 # ---------- Python 3.10, 3.11, 3.12 via pyenv ----------
 ENV PYENV_ROOT="/root/.pyenv"
 ENV PATH="$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
@@ -91,7 +108,7 @@ RUN echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc && \
     echo 'fi' >> ~/.bashrc && \
     echo '' >> ~/.bashrc
 
-# ---------- Fix pyenv & nvm for entrypoint ----------
+# ---------- Fix for entrypoint ----------
 RUN echo 'export PYENV_ROOT="/root/.pyenv"' >> /etc/profile.d/pyenv.sh && \
     echo 'export PATH="$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"' >> /etc/profile.d/pyenv.sh && \
     echo 'eval "$(pyenv init --path)"' >> /etc/profile.d/pyenv.sh
@@ -99,6 +116,17 @@ RUN echo 'export PYENV_ROOT="/root/.pyenv"' >> /etc/profile.d/pyenv.sh && \
 RUN echo 'export NVM_DIR="/root/.nvm"' >> /etc/profile.d/nvm.sh && \
     echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> /etc/profile.d/nvm.sh && \
     echo 'nvm use default > /dev/null 2>&1 || true' >> /etc/profile.d/nvm.sh
+
+RUN echo 'export SDKMAN_DIR="/root/.sdkman"' >> /etc/profile.d/sdkman.sh && \
+    echo '[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"' >> /etc/profile.d/sdkman.sh
+
+RUN echo 'export SDKMAN_DIR="/root/.sdkman"' >> ~/.bashrc && \
+    echo '[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"' >> ~/.bashrc && \
+    echo 'export PATH="$SDKMAN_DIR/candidates/maven/current/bin:$PATH"' >> ~/.bashrc
+
+RUN echo 'export SDKMAN_DIR="/root/.sdkman"' >> /etc/profile.d/sdkman.sh && \
+    echo '[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"' >> /etc/profile.d/sdkman.sh && \
+    echo 'export PATH="$SDKMAN_DIR/candidates/maven/current/bin:$PATH"' >> /etc/profile.d/sdkman.sh \
 
 # ---------- Copy and register scripts without .sh ----------
 WORKDIR /tmp/scripts
