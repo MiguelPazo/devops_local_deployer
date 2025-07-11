@@ -17,12 +17,6 @@ if [[ -z "$PROJECT" || -z "$APP" || -z "$ENVIRONMENT" ]]; then
   exit 1
 fi
 
-if [[ "$ENVIRONMENT" != "dev" && "$ENVIRONMENT" != "qa" && "$ENVIRONMENT" != "prod" ]]; then
-  echo "Invalid environment: $ENVIRONMENT"
-  echo "Valid values are: dev, qa, prod"
-  exit 1
-fi
-
 # === CHECK DEPENDENCIES ===
 for cmd in aws jq docker git xmllint; do
   if ! command -v $cmd &> /dev/null; then

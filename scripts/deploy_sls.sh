@@ -17,12 +17,6 @@ if [[ -z "$PROJECT" || -z "$APP" || -z "$ENVIRONMENT" ]]; then
   exit 1
 fi
 
-if [[ "$ENVIRONMENT" != "dev" && "$ENVIRONMENT" != "qa" && "$ENVIRONMENT" != "prod" ]]; then
-  echo "Invalid environment: $ENVIRONMENT"
-  echo "Valid values are: dev, qa, prod"
-  exit 1
-fi
-
 # === VALIDATE SLS CREDENTIAL ===
 if [[ -z "$SERVERLESS_ACCESS_KEY" ]]; then
   echo "Missing SLS credential: SERVERLESS_ACCESS_KEY"

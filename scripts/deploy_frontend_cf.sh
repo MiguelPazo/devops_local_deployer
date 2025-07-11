@@ -17,12 +17,6 @@ if [[ -z "$PROJECT" || -z "$APP" || -z "$ENVIRONMENT" ]]; then
   exit 1
 fi
 
-if [[ "$ENVIRONMENT" != "dev" && "$ENVIRONMENT" != "qa" && "$ENVIRONMENT" != "prod" ]]; then
-  echo "Invalid environment: $ENVIRONMENT"
-  echo "Valid values are: dev, qa, prod"
-  exit 1
-fi
-
 # === CHECK DEPENDENCIES ===
 for cmd in aws jq tar npm git; do
   if ! command -v $cmd &> /dev/null; then
@@ -63,6 +57,8 @@ if [[ "$APP_NAME" == "null" || "$REPO_HTTP" == "null" ]]; then
 fi
 
 # === LOAD ENVIRONMENT CONFIG VALUES ===
+NODEJS_VERSION=$(jq -r ."$ENVIRONMENT".NODEJS_VERSION "$CONFIG_FILE")
+NPM_VERSION=$(jq -r ."$ENVIRONMENT".NPM_VERSION "$CONFIG_FILE")
 BUILD_DIR=$(jq -r ."$ENVIRONMENT".BUILD_DIR "$CONFIG_FILE")
 BUCKET_S3_RELEASE=$(jq -r ."$ENVIRONMENT".BUCKET_S3_RELEASE "$CONFIG_FILE")
 BUCKET_S3_BUILD=$(jq -r ."$ENVIRONMENT".BUCKET_S3_BUILD "$CONFIG_FILE")
@@ -70,7 +66,9 @@ BUCKET_S3_PREFIX=$(jq -r ."$ENVIRONMENT".BUCKET_S3_PREFIX "$CONFIG_FILE")
 CLOUDFRONT_DIST_ID=$(jq -r ."$ENVIRONMENT".CLOUDFRONT_DIST_ID "$CONFIG_FILE")
 INVALIDATION_PATHS=$(jq -r ."$ENVIRONMENT".CLOUDFRONT_INVALIDATION_PATHS "$CONFIG_FILE")
 
-if [[ -z "$BUILD_DIR" || "$BUILD_DIR" == "null" || \
+if [[ -z "$NODEJS_VERSION" || "$NODEJS_VERSION" == "null" || \
+      -z "$NPM_VERSION" || "$NPM_VERSION" == "null" || \
+      -z "$BUILD_DIR" || "$BUILD_DIR" == "null" || \
       -z "$BUCKET_S3_RELEASE" || "$BUCKET_S3_RELEASE" == "null" || \
       -z "$BUCKET_S3_BUILD" || "$BUCKET_S3_BUILD" == "null" || \
       -z "$BUCKET_S3_PREFIX" || "$BUCKET_S3_PREFIX" == "null" || \
@@ -122,6 +120,36 @@ VERSION=$(jq -r .version "$PACKAGE_JSON")
 if [[ -z "$VERSION" || "$VERSION" == "null" ]]; then
   echo "Could not extract version from package.json"
   exit 1
+fi
+
+# === ENSURE NVM IS LOADED ===
+export NVM_DIR="$HOME/.nvm"
+source "$NVM_DIR/nvm.sh"
+
+# === INSTALL NODEJS & NPM VERSION IF NEEDED ===
+if ! nvm ls "$NODEJS_VERSION" | grep -q "$NODEJS_VERSION"; then
+  echo "Installing Node.js $NODEJS_VERSION..."
+  nvm install "$NODEJS_VERSION"
+fi
+
+nvm use "$NODEJS_VERSION"
+
+CURRENT_NPM_VERSION=$(npm -v)
+
+if [[ "$CURRENT_NPM_VERSION" != "$NPM_VERSION" ]]; then
+  echo "Installing NPM $NPM_VERSION..."
+  npm install -g "npm@$NPM_VERSION" || { echo "Failed to install NPM $NPM_VERSION"; exit 1; }
+fi
+
+# === COPY .env FILE BASED ON ENVIRONMENT ===
+ENV_FILE_SRC="$BASE_DIR/$APP/deploy/$ENVIRONMENT/.env"
+ENV_FILE_DEST="$APP_PATH/.env"
+
+if [[ -f "$ENV_FILE_SRC" ]]; then
+  echo "Copying $ENV_FILE_SRC to $ENV_FILE_DEST"
+  cp -f "$ENV_FILE_SRC" "$ENV_FILE_DEST" || { echo "Failed to copy .env file"; exit 1; }
+else
+  echo "⚠️ Warning: .env file not found for environment '$ENVIRONMENT' at $ENV_FILE_SRC"
 fi
 
 # === BUILD PROJECT ===

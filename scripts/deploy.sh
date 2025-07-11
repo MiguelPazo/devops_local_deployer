@@ -17,12 +17,6 @@ if [[ -z "$PROJECT" || -z "$APP" || -z "$ENVIRONMENT" ]]; then
   exit 1
 fi
 
-if [[ "$ENVIRONMENT" != "dev" && "$ENVIRONMENT" != "qa" && "$ENVIRONMENT" != "prod" ]]; then
-  echo "Invalid environment: $ENVIRONMENT"
-  echo "Valid values are: dev, qa, prod"
-  exit 1
-fi
-
 # === VALIDATE AWS CREDENTIALS ===
 REQUIRED_VARS=("AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY" "AWS_SESSION_TOKEN")
 for var in "${REQUIRED_VARS[@]}"; do

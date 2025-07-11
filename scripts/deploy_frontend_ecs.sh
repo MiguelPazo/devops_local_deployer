@@ -17,12 +17,6 @@ if [[ -z "$PROJECT" || -z "$APP" || -z "$ENVIRONMENT" ]]; then
   exit 1
 fi
 
-if [[ "$ENVIRONMENT" != "dev" && "$ENVIRONMENT" != "qa" && "$ENVIRONMENT" != "prod" ]]; then
-  echo "Invalid environment: $ENVIRONMENT"
-  echo "Valid values are: dev, qa, prod"
-  exit 1
-fi
-
 # === CHECK DEPENDENCIES ===
 for cmd in aws jq npm; do
   if ! command -v $cmd &> /dev/null; then
@@ -124,6 +118,36 @@ if [[ -z "$VERSION" || "$VERSION" == "null" ]]; then
 fi
 
 ECR_IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}"
+
+# === ENSURE NVM IS LOADED ===
+export NVM_DIR="$HOME/.nvm"
+source "$NVM_DIR/nvm.sh"
+
+# === INSTALL NODEJS & NPM VERSION IF NEEDED ===
+if ! nvm ls "$NODEJS_VERSION" | grep -q "$NODEJS_VERSION"; then
+  echo "Installing Node.js $NODEJS_VERSION..."
+  nvm install "$NODEJS_VERSION"
+fi
+
+nvm use "$NODEJS_VERSION"
+
+CURRENT_NPM_VERSION=$(npm -v)
+
+if [[ "$CURRENT_NPM_VERSION" != "$NPM_VERSION" ]]; then
+  echo "Installing NPM $NPM_VERSION..."
+  npm install -g "npm@$NPM_VERSION" || { echo "Failed to install NPM $NPM_VERSION"; exit 1; }
+fi
+
+# === COPY .env FILE BASED ON ENVIRONMENT ===
+ENV_FILE_SRC="$BASE_DIR/$APP/deploy/$ENVIRONMENT/.env"
+ENV_FILE_DEST="$APP_PATH/.env"
+
+if [[ -f "$ENV_FILE_SRC" ]]; then
+  echo "Copying $ENV_FILE_SRC to $ENV_FILE_DEST"
+  cp -f "$ENV_FILE_SRC" "$ENV_FILE_DEST" || { echo "Failed to copy .env file"; exit 1; }
+else
+  echo "⚠️ Warning: .env file not found for environment '$ENVIRONMENT' at $ENV_FILE_SRC"
+fi
 
 # === BUILD PROJECT ===
 echo "Entering app directory: $APP_PATH"
