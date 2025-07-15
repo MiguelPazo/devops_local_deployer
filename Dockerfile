@@ -38,11 +38,6 @@ RUN apt-get update && apt-get install -y \
 RUN wget https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64 -O /usr/local/bin/yq && \
     chmod +x /usr/local/bin/yq
 
-# ---------- AWS CLI ----------
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-    unzip awscliv2.zip && ./aws/install && \
-    rm -rf awscliv2.zip aws
-
 # ---------- SDKMAN + Java 8, 11, 17 ----------
 ENV SDKMAN_DIR="/root/.sdkman"
 ENV PATH="${SDKMAN_DIR}/candidates/java/current/bin:$PATH"
@@ -92,6 +87,16 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | b
     ln -s $NVM_DIR/versions/node/v$NODE_VERSION/bin/npm /usr/local/bin/npm && \
     ln -s $NVM_DIR/versions/node/v$NODE_VERSION/bin/npx /usr/local/bin/npx && \
     npm install -g $(cat /tmp/node.txt | xargs)"
+
+# ---------- AWS CLI ----------
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+    unzip awscliv2.zip && ./aws/install && \
+    rm -rf awscliv2.zip aws
+
+# ---------- AWS SAM CLI ----------
+RUN pip install --no-cache-dir pipx && \
+    pipx install aws-sam-cli && \
+    ln -s /root/.local/bin/sam /usr/local/bin/sam
 
 # ---------- Colored Bash Prompt + pyenv/nvm env setup ----------
 RUN echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc && \
