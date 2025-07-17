@@ -93,6 +93,11 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     unzip awscliv2.zip && ./aws/install && \
     rm -rf awscliv2.zip aws
 
+# ---------- AWS Session Manager Plugin ----------
+RUN curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb" && \
+    dpkg -i session-manager-plugin.deb && \
+    rm -f session-manager-plugin.deb
+
 # ---------- AWS SAM CLI ----------
 RUN pip install --no-cache-dir pipx && \
     pipx install aws-sam-cli && \
