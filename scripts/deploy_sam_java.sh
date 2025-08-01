@@ -138,7 +138,7 @@ sdk use maven $MAVEN_VERSION || { log "Failed to activate Maven $MAVEN_VERSION";
 
 # === COPY PROPERTIES FILE ===
 log "Copying application.properties for environment '$ENVIRONMENT'..."
-PARAMS_FILE="$BASE_DIR/deploy/$ENVIRONMENT/application.properties"
+PARAMS_FILE="$BASE_DIR/$APP/deploy/$ENVIRONMENT/application.properties"
 DEST_PARAMS_FILE="$APP_PATH/src/main/resources/application.properties"
 TOML_FILE="$BASE_DIR/$APP/samconfig.toml"
 DEST_TOML_FILE="$APP_PATH/samconfig.toml"
