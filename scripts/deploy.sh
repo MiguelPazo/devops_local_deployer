@@ -86,6 +86,10 @@ case "$TYPE" in
 #    ./deploy_ecs.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
     deploy_ecs --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
     ;;
+  webservice_ecs_fargate_php)
+#    ./deploy_ecs_php.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
+    deploy_ecs_php --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
+    ;;
   webservice_sam_java)
 #    ./deploy_sam_java.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
     deploy_sam_java --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"

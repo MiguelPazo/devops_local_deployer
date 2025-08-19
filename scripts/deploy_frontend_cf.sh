@@ -64,20 +64,20 @@ fi
 NODEJS_VERSION=$(jq -r ."$ENVIRONMENT".NODEJS_VERSION "$CONFIG_FILE")
 NPM_VERSION=$(jq -r ."$ENVIRONMENT".NPM_VERSION "$CONFIG_FILE")
 BUILD_DIR=$(jq -r ."$ENVIRONMENT".BUILD_DIR "$CONFIG_FILE")
+BUCKET_S3_PUBLISH=$(jq -r ."$ENVIRONMENT".BUCKET_S3_PUBLISH "$CONFIG_FILE")
 BUCKET_S3_RELEASE=$(jq -r ."$ENVIRONMENT".BUCKET_S3_RELEASE "$CONFIG_FILE")
-BUCKET_S3_BUILD=$(jq -r ."$ENVIRONMENT".BUCKET_S3_BUILD "$CONFIG_FILE")
-BUCKET_S3_PREFIX=$(jq -r ."$ENVIRONMENT".BUCKET_S3_PREFIX "$CONFIG_FILE")
+BUCKET_S3_RELEASE_PREFIX=$(jq -r ."$ENVIRONMENT".BUCKET_S3_RELEASE_PREFIX "$CONFIG_FILE")
 CLOUDFRONT_DIST_ID=$(jq -r ."$ENVIRONMENT".CLOUDFRONT_DIST_ID "$CONFIG_FILE")
-INVALIDATION_PATHS=$(jq -r ."$ENVIRONMENT".CLOUDFRONT_INVALIDATION_PATHS "$CONFIG_FILE")
+CLOUDFRONT_INVALIDATION_PATHS=$(jq -r ."$ENVIRONMENT".CLOUDFRONT_INVALIDATION_PATHS "$CONFIG_FILE")
 
 if [[ -z "$NODEJS_VERSION" || "$NODEJS_VERSION" == "null" || \
       -z "$NPM_VERSION" || "$NPM_VERSION" == "null" || \
       -z "$BUILD_DIR" || "$BUILD_DIR" == "null" || \
+      -z "$BUCKET_S3_PUBLISH" || "$BUCKET_S3_PUBLISH" == "null" || \
       -z "$BUCKET_S3_RELEASE" || "$BUCKET_S3_RELEASE" == "null" || \
-      -z "$BUCKET_S3_BUILD" || "$BUCKET_S3_BUILD" == "null" || \
-      -z "$BUCKET_S3_PREFIX" || "$BUCKET_S3_PREFIX" == "null" || \
+      -z "$BUCKET_S3_RELEASE_PREFIX" || "$BUCKET_S3_RELEASE_PREFIX" == "null" || \
       -z "$CLOUDFRONT_DIST_ID" || "$CLOUDFRONT_DIST_ID" == "null" || \
-      -z "$INVALIDATION_PATHS" || "$INVALIDATION_PATHS" == "null" ]]; then
+      -z "$CLOUDFRONT_INVALIDATION_PATHS" || "$CLOUDFRONT_INVALIDATION_PATHS" == "null" ]]; then
   log "❌ Missing or invalid configuration values for environment: $ENVIRONMENT"
   exit 1
 fi
@@ -180,21 +180,21 @@ log "Creating archive: $ARCHIVE_PATH from $BUILD_DIR..."
 tar -czf "$ARCHIVE_PATH" -C "$BUILD_DIR" . || { log "Error creating archive."; exit 1; }
 
 # === UPLOAD ARCHIVE TO BUILD BUCKET ===
-S3_ARCHIVE_PATH="s3://${BUCKET_S3_BUILD}${BUCKET_S3_PREFIX}/${ARCHIVE_NAME}"
+S3_ARCHIVE_PATH="s3://${BUCKET_S3_RELEASE}${BUCKET_S3_RELEASE_PREFIX}/${ARCHIVE_NAME}"
 log "Uploading archive to $S3_ARCHIVE_PATH..."
 aws s3 cp "$ARCHIVE_PATH" "$S3_ARCHIVE_PATH" || { log "Error uploading archive to S3."; exit 1; }
 
 # === DELETE EXISTING CONTENT FROM RELEASE BUCKET ===
-log "Deleting all objects from s3://$BUCKET_S3_RELEASE..."
-aws s3 rm "s3://$BUCKET_S3_RELEASE" --recursive || { log "Error deleting contents of release bucket."; exit 1; }
+log "Deleting all objects from s3://$BUCKET_S3_PUBLISH..."
+aws s3 rm "s3://$BUCKET_S3_PUBLISH" --recursive || { log "Error deleting contents of release bucket."; exit 1; }
 
 # === SYNC BUILD_DIR TO RELEASE BUCKET ===
-log "Syncing $BUILD_DIR with s3://$BUCKET_S3_RELEASE..."
-aws s3 sync "$BUILD_DIR" "s3://$BUCKET_S3_RELEASE" --delete || { log "Error syncing to release bucket."; exit 1; }
+log "Syncing $BUILD_DIR with s3://$BUCKET_S3_PUBLISH..."
+aws s3 sync "$BUILD_DIR" "s3://$BUCKET_S3_PUBLISH" --delete || { log "Error syncing to release bucket."; exit 1; }
 
 # === INVALIDATE CLOUDFRONT CACHE ===
 log "Invalidating CloudFront cache for distribution $CLOUDFRONT_DIST_ID..."
-aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DIST_ID" --paths "$INVALIDATION_PATHS" || { log "Error invalidating CloudFront cache."; exit 1; }
+aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DIST_ID" --paths "$CLOUDFRONT_INVALIDATION_PATHS" || { log "Error invalidating CloudFront cache."; exit 1; }
 
 log "Cleaning up $APP_PATH..."
 rm -rf "$APP_PATH"

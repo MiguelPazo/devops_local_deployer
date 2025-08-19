@@ -60,8 +60,6 @@ ENV PYENV_ROOT="/root/.pyenv"
 ENV PATH="$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
 
 RUN git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT && \
-    $PYENV_ROOT/bin/pyenv install 3.10.14 && \
-    $PYENV_ROOT/bin/pyenv install 3.11.9 && \
     $PYENV_ROOT/bin/pyenv install 3.12.0 && \
     $PYENV_ROOT/bin/pyenv install 3.13.0 && \
     $PYENV_ROOT/bin/pyenv global 3.13.0 && \
