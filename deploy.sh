@@ -2,7 +2,7 @@
 
 # ----------- CONFIGURATION ------------
 IMAGE_NAME="miguelpazo/devops-local-deployer"
-VERSION="1.6.4"
+VERSION="1.7.0"
 DOCKERFILE_PATH="."
 
 # ----------- DOCKER LOGIN ------------

@@ -5,11 +5,13 @@ log() {
 }
 
 # === PARSE ARGUMENTS ===
+CONFIG_FILE_PARAM="projects_config.json"
 for arg in "$@"; do
   case $arg in
     --project=*) PROJECT="${arg#*=}" ;;
     --app=*) APP="${arg#*=}" ;;
     --env=*) ENVIRONMENT="${arg#*=}" ;;
+    --config-file=*) CONFIG_FILE_PARAM="${arg#*=}" ;;
     *) log "Unknown argument: $arg"; exit 1 ;;
   esac
 done
@@ -20,6 +22,8 @@ if [[ -z "$PROJECT" || -z "$APP" || -z "$ENVIRONMENT" ]]; then
   log "Missing required parameters: --project=project1 --app=app1 --env=dev"
   exit 1
 fi
+
+log "Using config file: $CONFIG_FILE_PARAM"
 
 # === VALIDATE AWS CREDENTIALS ===
 REQUIRED_VARS=("AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY" "AWS_SESSION_TOKEN")
@@ -32,9 +36,9 @@ for var in "${REQUIRED_VARS[@]}"; do
 done
 
 # === CHECK PROJECTS PATH FILE ===
-PROJECTS_CONFIG_FILE="/deploy_projects/projects_config.json"
+PROJECTS_CONFIG_FILE="/deploy_projects/$CONFIG_FILE_PARAM"
 if [[ ! -f "$PROJECTS_CONFIG_FILE" ]]; then
-  log "File 'projects_config.json' not found."
+  log "File '$CONFIG_FILE_PARAM' not found."
   log "Please create it following the structure in 'projects_path.sample.json'"
   exit 1
 fi
@@ -71,28 +75,28 @@ log "pipeline type: $TYPE"
 # === DISPATCH TO CORRECT PIPELINE ===
 case "$TYPE" in
   frontend_cloudfront_s3)
-#    ./deploy_frontend_cf.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
-    deploy_frontend_cf --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
+#    ./deploy_frontend_cf.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT" --config-file="$CONFIG_FILE_PARAM"
+    deploy_frontend_cf --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT" --config-file="$CONFIG_FILE_PARAM"
     ;;
   frontend_ecs_fargate)
-#    ./deploy_frontend_ecs.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
-    deploy_frontend_ecs --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
+#    ./deploy_frontend_ecs.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT" --config-file="$CONFIG_FILE_PARAM"
+    deploy_frontend_ecs --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT" --config-file="$CONFIG_FILE_PARAM"
     ;;
   webservice_sls_python)
-#    ./deploy_sls.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
-    deploy_sls --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
+#    ./deploy_sls.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT" --config-file="$CONFIG_FILE_PARAM"
+    deploy_sls --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT" --config-file="$CONFIG_FILE_PARAM"
     ;;
   webservice_ecs_fargate)
-#    ./deploy_ecs.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
-    deploy_ecs --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
+#    ./deploy_ecs.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT" --config-file="$CONFIG_FILE_PARAM"
+    deploy_ecs --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT" --config-file="$CONFIG_FILE_PARAM"
     ;;
   webservice_ecs_fargate_php)
-#    ./deploy_ecs_php.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
-    deploy_ecs_php --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
+#    ./deploy_ecs_php.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT" --config-file="$CONFIG_FILE_PARAM"
+    deploy_ecs_php --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT" --config-file="$CONFIG_FILE_PARAM"
     ;;
   webservice_sam_java)
-#    ./deploy_sam_java.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
-    deploy_sam_java --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT"
+#    ./deploy_sam_java.sh --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT" --config-file="$CONFIG_FILE_PARAM"
+    deploy_sam_java --project="$PROJECT" --app="$APP" --env="$ENVIRONMENT" --config-file="$CONFIG_FILE_PARAM"
     ;;
   *)
     log "Unknown pipeline type: $TYPE"

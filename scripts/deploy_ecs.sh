@@ -5,11 +5,13 @@ log() {
 }
 
 # === PARSE ARGUMENTS ===
+CONFIG_FILE_PARAM="projects_config.json"
 for arg in "$@"; do
   case $arg in
     --project=*) PROJECT="${arg#*=}" ;;
     --app=*) APP="${arg#*=}" ;;
     --env=*) ENVIRONMENT="${arg#*=}" ;;
+    --config-file=*) CONFIG_FILE_PARAM="${arg#*=}" ;;
     *) log "Unknown argument: $arg"; exit 1 ;;
   esac
 done
@@ -20,6 +22,8 @@ if [[ -z "$PROJECT" || -z "$APP" || -z "$ENVIRONMENT" ]]; then
   log "Params required: --project=project1 --app=app1 --env=dev"
   exit 1
 fi
+
+log "Using config file: $CONFIG_FILE_PARAM"
 
 # === CHECK DEPENDENCIES ===
 for cmd in aws jq docker git xmllint; do
@@ -32,7 +36,7 @@ done
 # === LOAD CONFIG FILE PATHS ===
 BASE_DIR="/deploy_projects/$PROJECT"
 CONFIG_FILE="$BASE_DIR/$APP/config.json"
-PROJECTS_CONFIG_FILE="/deploy_projects/projects_config.json"
+PROJECTS_CONFIG_FILE="/deploy_projects/$CONFIG_FILE_PARAM"
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
   log "Configuration file '$CONFIG_FILE' not found."
@@ -40,7 +44,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 fi
 
 if [[ ! -f "$PROJECTS_CONFIG_FILE" ]]; then
-  log "projects_config.json file not found"
+  log "$CONFIG_FILE_PARAM file not found"
   exit 1
 fi
 
