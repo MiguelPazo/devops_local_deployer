@@ -35,6 +35,15 @@ for var in "${REQUIRED_VARS[@]}"; do
   fi
 done
 
+# === VALIDATE AWS CREDENTIALS ARE STILL VALID ===
+log "Validating AWS credentials..."
+if ! aws sts get-caller-identity >/dev/null 2>&1; then
+  log "AWS credentials are invalid or expired"
+  log "Please run: source awsconfig --profile <profile_name>"
+  exit 1
+fi
+log "AWS credentials are valid"
+
 # === CHECK PROJECTS PATH FILE ===
 PROJECTS_CONFIG_FILE="/deploy_projects/$CONFIG_FILE_PARAM"
 if [[ ! -f "$PROJECTS_CONFIG_FILE" ]]; then
